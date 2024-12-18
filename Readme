@@ -1,0 +1,62 @@
+# Tax Clause Processor
+
+This application processes tax clauses and converts them into structured formats including:
+ - glossary
+ - logic rules
+ - pseudo-code
+ - JSON. 
+ The application can run in two modes: Console Application or Web API.
+
+## Prerequisites
+
+1. Install .NET 7.0.102 or later
+2. Have your tax clause files ready in .txt format
+3. Have your prompt files ready in the instructions folder
+
+## Project Setup
+
+1. Create required directories:
+```bash
+mkdir tax_clauses
+mkdir instructions
+```
+
+2. Place your tax clause .txt files in the tax_clauses directory
+3. Place your prompt files in the instructions directory:
+   - glossary_extractor.txt
+   - clause_to_logic.txt
+   - logic_to_pseudo.txt
+   - pseudo_to_json.txt
+
+4. Configure your `appsettings.json` with your API keys
+
+## Running the Application
+
+### Console Mode
+To run as a console application that automatically processes all files:
+```
+dotnet run
+```
+The console will show progress as it processes each file.
+
+### Web API Mode
+To run as a Web API:
+```
+dotnet run --webapi
+```
+Access Swagger UI at: https://localhost:7234/swagger
+
+Available endpoints:
+- POST `/api/taxprocessor/process-all`: Process all tax clauses
+- GET `/api/taxprocessor/status`: Check service status
+
+## Output
+
+Both modes will generate a Word document named "Tax Ordinance to Machine-Readable Rule Handbook.docx" containing:
+- Original clause
+- Glossary of terms
+- Logic rules
+- Pseudo-code
+- JSON representation
+
+Each clause will be on a separate page in the document.
