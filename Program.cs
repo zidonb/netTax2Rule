@@ -11,7 +11,7 @@ class Program
 
         var app = builder.Build();
 
-        // Configure Web API if --webapi argument is passed
+        // Check for the --webapi argument to decide mode
         if (args.Contains("--webapi"))
         {
             // Set explicit URLs
@@ -19,11 +19,11 @@ class Program
             app.Urls.Add("https://localhost:5001");
 
             ConfigureWebApi(app);
-            
+
             Console.WriteLine("Web API started.");
             Console.WriteLine("Access Swagger UI at: http://localhost:5000/swagger");
             Console.WriteLine("Or secure endpoint at: https://localhost:5001/swagger");
-            
+
             await app.RunAsync();
         }
         else
@@ -31,13 +31,27 @@ class Program
             // Run as console application
             using (var scope = app.Services.CreateScope())
             {
-                var processor = scope.ServiceProvider.GetRequiredService<TaxProcessorService>();
-                Console.WriteLine("Starting tax clause processing...");
-                await processor.ProcessAllClauses();
-                Console.WriteLine("Processing completed.");
+                // Check for an argument or configuration to decide which processor to run
+                var runGlossaryProcessor = args.Contains("--glossary");
+
+                if (runGlossaryProcessor)
+                {
+                    var glossaryProcessor = scope.ServiceProvider.GetRequiredService<GlossaryProcessorService>();
+                    Console.WriteLine("Starting glossary processing...");
+                    await glossaryProcessor.ProcessAllClauses();
+                    Console.WriteLine("Glossary processing completed.");
+                }
+                else
+                {
+                    var taxProcessor = scope.ServiceProvider.GetRequiredService<TaxProcessorService>();
+                    Console.WriteLine("Starting tax clause processing...");
+                    await taxProcessor.ProcessAllClauses();
+                    Console.WriteLine("Tax clause processing completed.");
+                }
             }
         }
     }
+
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -46,6 +60,9 @@ class Program
         services.AddSingleton<HandbookDocumentService>();
         services.AddSingleton<PromptLoaderService>();
         services.AddSingleton<TaxProcessorService>();
+        services.AddSingleton<GlossaryProcessorService>();
+        services.AddSingleton<GlossaryDocumentService>();
+
 
         // HTTP Client factory for better HttpClient management
         services.AddHttpClient();
@@ -67,9 +84,10 @@ class Program
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { 
-                Title = "Tax Ordinance Processing API", 
-                Version = "v1" 
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Tax Ordinance Processing API",
+                Version = "v1"
             });
         });
 
@@ -77,12 +95,12 @@ class Program
         var aiSettings = configuration.GetSection("AiSettings").Get<AiSettings>();
         if (aiSettings?.ModelProvider == "Anthropic")
         {
-            services.AddSingleton<IGenAICaller>(sp => 
+            services.AddSingleton<IGenAICaller>(sp =>
                 new AnthropicCaller(aiSettings.AnthropicApiKey, aiSettings.HaikuModel));
         }
         else if (aiSettings?.ModelProvider == "OpenAI")
         {
-            services.AddSingleton<IGenAICaller>(sp => 
+            services.AddSingleton<IGenAICaller>(sp =>
                 new OpenAICaller(aiSettings.OpenAiApiKey));
         }
         else
