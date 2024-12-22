@@ -1,3 +1,23 @@
-# Ignore build output folders
+# Build Folders
 bin/
 obj/
+
+# Visual Studio-specific Files
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# NuGet Packages
+packages/
+*.nupkg
+
+# Logs
+*.log
+
+# Environment Files
+.env
+
+# IDE/Editor-specific Files
+.idea/
+.vscode/
